@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2020",
+    "types": ["node"],
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist" // Or wherever you want the .d.ts files to go
+  },
+  "include": ["index.js"] // Or the entry point(s) of your library
+}

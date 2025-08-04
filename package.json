@@ -1,0 +1,27 @@
+{
+  "name": "@bascanada/openscad-compiler",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build:types": "tsc",
+    "download:release": "gh release download --repo openscad/openscad-wasm 2022.03.20 -D release"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist/",
+    "release/",
+    "compilers/",
+    "index.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "",
+  "license": "GPL-3.0-only",
+  "description": "Single interface to compile OpenScad file to STL. In node using openscad-wasm or native binary and in the browser using openscad-wasm with a web worker"
+}

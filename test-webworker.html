@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OpenSCAD WebWorker Test</title>
+</head>
+<body>
+  <h1>OpenSCAD WebWorker Test</h1>
+  <label for="wasmPath">WASM Path:</label>
+  <input id="wasmPath" type="text" value="./release/openscad.wasm.js" size="40" />
+  <button id="run">Compile SCAD</button>
+  <pre id="output"></pre>
+  <script type="module">
+    import { compileWebWorker } from './compilers/web_worker.js';
+
+    document.getElementById('run').onclick = async () => {
+      const scadCode = 'cube([1,2,3]);';
+      const output = document.getElementById('output');
+      const wasmPath = document.getElementById('wasmPath').value;
+      output.textContent = 'Compiling...';
+      try {
+        const result = await compileWebWorker(scadCode, wasmPath);
+        output.textContent = 'Compiled result:\n' + JSON.stringify(result, null, 2);
+      } catch (err) {
+        output.textContent = 'Error: ' + err;
+      }
+    };
+  </script>
+</body>
+</html>

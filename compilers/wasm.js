@@ -2,6 +2,7 @@ import OpenSCAD from './wasm_loader.js';
 
 
 let instance;
+
 /**
  * Compiles OpenSCAD code using the WASM engine.
  * @param {string} scadCode - The OpenSCAD code.
@@ -9,9 +10,13 @@ let instance;
  */
 export async function compileWasm(scadCode) {
   try {
-    const instance = await OpenSCAD();
+    instance = await OpenSCAD();
     instance.FS.writeFile("/input.scad", scadCode);
-    instance.callMain(["/input.scad", "-o", "cube.stl"]);
+    instance.callMain(["/input.scad", "-o", "cube.stl",
+        '--enable=fast-csg',
+        '--enable=lazy-union',
+        '--enable=roof', 
+    ]);
     const output = instance.FS.readFile("/cube.stl");
     return output;
   } catch (error) {

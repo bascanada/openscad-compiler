@@ -22,7 +22,11 @@ export async function compileNative(scadCode, executablePath) {
 
     // Run the native openscad command
     await new Promise((resolve, reject) => {
-      const process = spawn(executablePath, ['-o', outputFile, inputFile, '--preview', '--viewall', '--autocenter']);
+      const process = spawn(executablePath, ['-o', outputFile, inputFile, 
+        '--backend=manifold',
+        '--enable=lazy-union',
+        '--enable=roof', 
+      ]);
       let stderr = '';
 
       process.stderr.on('data', (data) => {

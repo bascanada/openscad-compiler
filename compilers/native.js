@@ -1,4 +1,4 @@
-import { execFile } from 'child_process';
+import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -22,12 +22,34 @@ export async function compileNative(scadCode, executablePath) {
 
     // Run the native openscad command
     await new Promise((resolve, reject) => {
-      execFile(executablePath, ['-o', outputFile, inputFile], (error) => {
-        if (error) {
-          console.error('Native Compilation Error:', error);
-          return reject(new Error('Failed to execute native OpenSCAD. Is it installed and in your PATH?'));
+      const process = spawn(executablePath, ['-o', outputFile, inputFile, '--preview', '--viewall', '--autocenter']);
+      let stderr = '';
+
+      process.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      process.on('error', (error) => {
+        console.error('Native Compilation Error (spawn):', error);
+        if (error.code === 'ENOENT') {
+          return reject(
+            new Error(
+              `Failed to execute native OpenSCAD. The executable was not found at the specified path: "${executablePath}". Please ensure the path is correct in the extension settings.`
+            )
+          );
         }
-        resolve();
+        reject(new Error('Failed to spawn native OpenSCAD process.'));
+      });
+
+      process.on('close', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          const errorMessage = `Native OpenSCAD process exited with code ${code}.`;
+          console.error(errorMessage);
+          console.error('stderr:', stderr);
+          reject(new Error(`${errorMessage}\n${stderr}`));
+        }
       });
     });
 

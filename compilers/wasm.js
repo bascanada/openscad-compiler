@@ -1,4 +1,7 @@
 import OpenSCAD from './wasm_loader.js';
+
+
+let instance;
 /**
  * Compiles OpenSCAD code using the WASM engine.
  * @param {string} scadCode - The OpenSCAD code.

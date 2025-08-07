@@ -10,14 +10,14 @@ const wasmBinary = readFileSync(wasmBinaryPath);
 
 const OpenSCAD = (options) => {
     return new Promise((resolve) => {
-        const Module = {
+        globalThis.OpenSCAD = {
             ...options,
             wasmBinary,
             onRuntimeInitialized: () => {
-                resolve(Module);
+                resolve(globalThis.OpenSCAD);
             },
         };
-        new Function('Module', wasmJsContent)(Module);
+        new Function(wasmJsContent)();
     });
 };
 

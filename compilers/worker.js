@@ -1,25 +1,12 @@
-import { Command } from './command.js';
-
-let OpenSCAD;
+importScripts('command.js');
 
 self.onmessage = async function(e) {
     const { scadCode, quality, outputFormat, wasmPath } = e.data;
 
-    if (!OpenSCAD) {
-        import(wasmPath)
-            .then((module) => {
-                OpenSCAD = module.default;
-                compile(scadCode, quality, outputFormat);
-            })
-            .catch((err) => {
-                self.postMessage({ type: 'error', payload: err.message });
-            });
-    } else {
-        compile(scadCode, quality, outputFormat);
-    }
-};
+    importScripts(wasmPath);
 
-async function compile(scadCode, quality, outputFormat) {
+    const OpenSCAD = self.OpenSCAD;
+
     try {
         self.postMessage({ type: 'compiling' });
 
@@ -36,4 +23,4 @@ async function compile(scadCode, quality, outputFormat) {
     } catch (err) {
         self.postMessage({ type: 'error', payload: err.message });
     }
-}
+};

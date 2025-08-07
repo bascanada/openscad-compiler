@@ -10,5 +10,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Install OpenSCAD
+        run: sudo apt-get install openscad
       - run: npm install
+      - name: Download openscad-wasm release
+        run: npm run download:release
       - run: node test.js

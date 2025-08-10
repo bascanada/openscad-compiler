@@ -1,3 +1,29 @@
+/**
+ * Gets the version of the WASM OpenSCAD engine.
+ * @returns {Promise<string>} Resolves with the version string.
+ */
+export async function getWasmVersion() {
+  let version = '';
+  let instance;
+  instance = await OpenSCAD({
+    print: (text) => {
+      version += text + '\n';
+    },
+    printErr: (text) => {
+      version += text + '\n';
+    }
+  });
+  // Call with --version, which should print version and exit
+  instance.callMain(['--version']);
+  // Wait a tick to let output flush (WASM is sync)
+  await new Promise((r) => setTimeout(r, 10));
+  // Try to extract version from output
+  const match = version.match(/OpenSCAD version[^\n]*/i);
+  if (match) {
+    return match[0];
+  }
+  return version.trim();
+}
 
 import OpenSCAD from './wasm_loader.js';
 import { EventEmitter } from 'events';

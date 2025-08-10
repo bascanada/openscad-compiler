@@ -1,3 +1,30 @@
+/**
+ * Gets the version of the native OpenSCAD executable.
+ * @param {string} executablePath - Path to the openscad executable.
+ * @returns {Promise<string>} Resolves with the version string.
+ */
+export async function getNativeVersion(executablePath = 'openscad') {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(executablePath, ['--version']);
+    let output = '';
+    proc.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+    proc.stderr.on('data', (data) => {
+      output += data.toString();
+    });
+    proc.on('error', (err) => reject(err));
+    proc.on('close', () => {
+      // Try to extract version from output
+      const match = output.match(/OpenSCAD version[^\n]*/i);
+      if (match) {
+        resolve(match[0]);
+      } else {
+        resolve(output.trim());
+      }
+    });
+  });
+}
 import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import { join } from 'path';

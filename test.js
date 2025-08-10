@@ -3,8 +3,11 @@ import { Compiler } from './index.js';
 import { writeFile } from 'node:fs/promises';
 
 
-const compilerNative = new Compiler({ engine: 'native', fileType: '3mf' });
-const compilerWasm = new Compiler({ engine: 'wasm', fileType: '3mf' });
+const compilerNative = new Compiler({ engine: 'native', fileType: 'stl' });
+const compilerWasm = new Compiler({ engine: 'wasm', fileType: 'stl', args: { fast: [
+    "--enable=fast-csg", "--enable=lazy-union", "--enable=roof"
+], full: [] } });
+
 
 
 const text = `
@@ -104,10 +107,23 @@ function wrapEmitter(prefix, emitter) {
     };
 
     once(emitter, 'done').then(async (wasmOutput) => {
-        await writeFile(`./cube_${prefix}.3mf`, wasmOutput);
+        await writeFile(`./cube_${prefix}.stl`, wasmOutput);
     });
 }
 
-wrapEmitter('wasm', compilerWasm.compile(text));
-wrapEmitter('native', compilerNative.compile(text));
 
+
+(async () => {
+
+
+    const versionWasm = await compilerWasm.getVersion();
+    const versionNative = await compilerNative.getVersion();
+
+    console.log("native version:", versionNative);
+    console.log("wasm version:", versionWasm);
+
+    wrapEmitter('wasm', compilerWasm.compile(text));
+    wrapEmitter('native', compilerNative.compile(text));
+
+
+})();

@@ -1,6 +1,5 @@
 import { compileWasm } from './compilers/wasm.js';
 import { compileNative } from './compilers/native.js';
-import { compileWebWorker } from './compilers/web_worker.js';
 
 /**
  * @typedef {'wasm' | 'native' | 'webworker'} EngineType
@@ -33,8 +32,10 @@ export class Compiler {
       return compileNative(scadCode, this.nativePath);
     } else if (this.engine === 'wasm') {
       return compileWasm(scadCode);
+    } else if (this.engine === 'webworker') {
+      throw new Error("WebWorker engine is not supporte yet");
     } else {
-      return compileWebWorker(scadCode);
+      throw new Error(`Unknown engine type: ${this.engine}`);
     }
   }
 }

@@ -3,8 +3,8 @@ import { Compiler } from './index.js';
 import { writeFile } from 'node:fs/promises';
 
 
-const compilerNative = new Compiler({ engine: 'native' });
-const compilerWasm = new Compiler({ engine: 'wasm' });
+const compilerNative = new Compiler({ engine: 'native', fileType: '3mf' });
+const compilerWasm = new Compiler({ engine: 'wasm', fileType: '3mf' });
 
 
 const text = `
@@ -104,7 +104,7 @@ function wrapEmitter(prefix, emitter) {
     };
 
     once(emitter, 'done').then(async (wasmOutput) => {
-        await writeFile(`./cube_${prefix}.stl`, wasmOutput);
+        await writeFile(`./cube_${prefix}.3mf`, wasmOutput);
     });
 }
 

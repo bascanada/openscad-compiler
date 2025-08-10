@@ -16,7 +16,9 @@
     "dist/",
     "release/",
     "compilers/",
-    "index.js"
+    "index.js",
+    "BROWSER_USAGE.md",
+    "browser-test.html"
   ],
   "publishConfig": {
     "access": "public"

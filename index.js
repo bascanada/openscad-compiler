@@ -27,7 +27,7 @@ export class Compiler {
    * @param {string} scadCode - The OpenSCAD code to compile.
    * @returns {Promise<string>} A promise that resolves with the STL data.
    */
-  async compile(scadCode) {
+  compile(scadCode) {
     if (this.engine === 'native') {
       return compileNative(scadCode, this.nativePath);
     } else if (this.engine === 'wasm') {

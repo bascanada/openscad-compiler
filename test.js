@@ -1,3 +1,4 @@
+import { once } from 'node:events';
 import { Compiler } from './index.js';
 import { writeFile } from 'node:fs/promises';
 
@@ -93,17 +94,20 @@ difference() {
 }
 `;
 
+function wrapEmitter(prefix, emitter) {
+    const origEmit = emitter.emit;
+    emitter.emit = function(event, ...args) {
+        if (event !== 'done') {
+            //console.log(`[${prefix}] ${event}:`, ...args);
+        }
+        return origEmit.call(this, event, ...args);
+    };
 
-Promise.all([
-    compilerWasm.compile(text),
-    //compilerNative.compile('cube(10);'),
-]).then(async ([nativeWasm]) => {
-    await writeFile('./cube_wasm.stl', nativeWasm);
-    //await writeFile('./cube_native.stl', nativeOutput);
-
-
-
-    compilerWasm.compile(text).then(async (wasmOutput) => {
-        console.log('Done an dusted , out of this world');
+    once(emitter, 'done').then(async (wasmOutput) => {
+        await writeFile(`./cube_${prefix}.stl`, wasmOutput);
     });
-});
+}
+
+wrapEmitter('wasm', compilerWasm.compile(text));
+wrapEmitter('native', compilerNative.compile(text));
+

@@ -3,9 +3,15 @@
 Single interface to compile OpenSCAD files to STL on all platforms (Node.js, WASM, native, or web worker).
 
 ## Features
-- Compile OpenSCAD files to STL
+
+- Compile OpenSCAD files in Fast or Full mode
 - Works in Node.js, browser (WASM), native, and web worker environments
 - Uses [openscad-wasm](https://github.com/openscad/openscad-wasm) under the hood
+
+## Usage
+
+* [nodejs see test.js](./test.js)
+* [browser see browser-test.html](./browser-test.html)
 
 ## License
 This project is licensed under GNU GPL v3. See the LICENSE file for details.

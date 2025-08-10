@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenSCAD Browser Compiler Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        button {
+            background-color: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #005a9e;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .output {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.info { background-color: #e3f2fd; }
+        .status.success { background-color: #e8f5e8; }
+        .status.error { background-color: #ffebee; }
+    </style>
+</head>
+<body>
+    <h1>OpenSCAD Browser Compiler</h1>
+    
+    <div class="container">
+        <div>
+            <h3>OpenSCAD Code</h3>
+            <textarea id="scadCode" placeholder="Enter your OpenSCAD code here...">
+// Example: Simple cube
+cube([10, 10, 10]);
+            </textarea>
+            <br>
+            <label for="fileType">Output Format:</label>
+            <select id="fileType">
+                <option value="stl">STL</option>
+                <option value="amf">AMF</option>
+                <option value="3mf">3MF</option>
+            </select>
+            <br><br>
+            <button id="compileBtn">Compile</button>
+            <button id="getVersionBtn">Get Version</button>
+            <button id="clearBtn">Clear Output</button>
+        </div>
+        
+        <div>
+            <h3>Output</h3>
+            <div id="status" class="status"></div>
+            <div id="output" class="output"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { compileWasm, getWasmVersion, terminateWorker } from './compilers/wasm_browser.js';
+        
+        const scadCodeTextarea = document.getElementById('scadCode');
+        const fileTypeSelect = document.getElementById('fileType');
+        const compileBtn = document.getElementById('compileBtn');
+        const getVersionBtn = document.getElementById('getVersionBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusDiv = document.getElementById('status');
+        const outputDiv = document.getElementById('output');
+        
+        function setStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function appendOutput(text, type = '') {
+            const span = document.createElement('span');
+            span.textContent = text;
+            if (type) {
+                span.style.color = type === 'stderr' ? 'red' : 'blue';
+            }
+            outputDiv.appendChild(span);
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+        
+        compileBtn.addEventListener('click', async () => {
+            const scadCode = scadCodeTextarea.value;
+            const fileType = fileTypeSelect.value;
+            
+            if (!scadCode.trim()) {
+                setStatus('Please enter some OpenSCAD code', 'error');
+                return;
+            }
+            
+            compileBtn.disabled = true;
+            outputDiv.textContent = '';
+            setStatus('Compiling...', 'info');
+            
+            try {
+                const emitter = compileWasm(scadCode, fileType, ["--enable=fast-csg", "--enable=lazy-union", "--enable=roof"]);
+                
+                emitter.on('stdout', (data) => {
+                    appendOutput(data, 'stdout');
+                });
+                
+                emitter.on('stderr', (data) => {
+                    appendOutput(data, 'stderr');
+                });
+                
+                emitter.on('done', (result) => {
+                    setStatus(`Compilation completed! Output size: ${result.length} characters`, 'success');
+                    appendOutput(`\n=== COMPILATION RESULT ===\n${result}\n`);
+                    compileBtn.disabled = false;
+                });
+                
+                emitter.on('error', (error) => {
+                    setStatus(`Compilation failed: ${error.message}`, 'error');
+                    appendOutput(`\nERROR: ${error.message}\n`, 'stderr');
+                    compileBtn.disabled = false;
+                });
+                
+            } catch (error) {
+                setStatus(`Failed to start compilation: ${error.message}`, 'error');
+                compileBtn.disabled = false;
+            }
+        });
+        
+        getVersionBtn.addEventListener('click', async () => {
+            getVersionBtn.disabled = true;
+            setStatus('Getting version...', 'info');
+            
+            try {
+                const version = await getWasmVersion();
+                setStatus('Version retrieved successfully', 'success');
+                appendOutput(`\n=== VERSION ===\n${version}\n`);
+            } catch (error) {
+                setStatus(`Failed to get version: ${error.message}`, 'error');
+                appendOutput(`\nERROR: ${error.message}\n`, 'stderr');
+            } finally {
+                getVersionBtn.disabled = false;
+            }
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            outputDiv.textContent = '';
+            setStatus('Output cleared', 'info');
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            terminateWorker();
+        });
+    </script>
+</body>
+</html>

@@ -98,7 +98,7 @@ function wrapEmitter(prefix, emitter) {
     const origEmit = emitter.emit;
     emitter.emit = function(event, ...args) {
         if (event !== 'done') {
-            //console.log(`[${prefix}] ${event}:`, ...args);
+            console.log(`[${prefix}] ${event}:`, ...args);
         }
         return origEmit.call(this, event, ...args);
     };

@@ -7,9 +7,11 @@ let instance;
 /**
  * Compiles OpenSCAD code using the WASM engine, emitting live updates.
  * @param {string} scadCode - The OpenSCAD code.
+ * @param {string} [fileType='stl'] - Output file type (e.g., 'stl', 'amf').
+ * @param {string[]} [args=[]] - Extra command-line arguments.
  * @returns {EventEmitter} Emits 'stdout', 'stderr', 'done', and 'error' events.
  */
-export function compileWasm(scadCode) {
+export function compileWasm(scadCode, fileType = 'stl', args = []) {
   const emitter = new EventEmitter();
   (async () => {
     let stdout = '';
@@ -27,23 +29,20 @@ export function compileWasm(scadCode) {
       });
       instance.FS.writeFile("/input.scad", scadCode);
 
-      instance.callMain(["/input.scad", "-o", "cube.stl",
-        '--enable=fast-csg',
-        '--enable=lazy-union',
-        '--enable=roof',
-      ]);
+      const outputName = `/cube.${fileType}`;
+      instance.callMain(["/input.scad", "-o", outputName].concat(args));
 
-      const output = instance.FS.readFile("/cube.stl");
+      const output = instance.FS.readFile(outputName);
       // Convert Uint8Array to string for consistency
-      let stlString;
+      let resultString;
       if (typeof output === 'string') {
-        stlString = output;
+        resultString = output;
       } else if (output instanceof Uint8Array) {
-        stlString = new TextDecoder('utf-8').decode(output);
+        resultString = new TextDecoder('utf-8').decode(output);
       } else {
-        stlString = String(output);
+        resultString = String(output);
       }
-      emitter.emit('done', stlString);
+      emitter.emit('done', resultString);
     } catch (error) {
       emitter.emit('error', error);
     }

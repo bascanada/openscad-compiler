@@ -57,6 +57,25 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         run: npm run build:types
 
+      - name: Install GitHub CLI
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Download OpenSCAD WASM release
+        if: steps.version.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run download:release
+
+      - name: Configure npm for publish
+        if: steps.version.outputs.changed == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true'
         env:

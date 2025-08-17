@@ -8,6 +8,10 @@
     "build:types": "tsc",
     "download:release": "gh release download --repo openscad/openscad-wasm 2022.03.20 -D release"
   },
+  "dependencies": {
+    "json5": "^2.2.3",
+    "node-stl": "^0.7.3"
+  },
   "devDependencies": {
     "@types/node": "^24.1.0",
     "typescript": "^5.0.0"

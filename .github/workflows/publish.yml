@@ -1,0 +1,67 @@
+name: Build and publish to npm
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          always-auth: true
+
+      - name: Determine if package version changed
+        id: version
+        run: |
+          set -e
+          # if previous commit exists, compare package.json versions
+          if git rev-parse HEAD^1 >/dev/null 2>&1; then
+            PREV_COMMIT=$(git rev-parse HEAD^1)
+            git show $PREV_COMMIT:package.json > package_prev.json || true
+            NEW_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
+            OLD_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package_prev.json','utf8')).version)")
+            echo "old=$OLD_VERSION" >> $GITHUB_OUTPUT
+            echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+            if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # no previous commit (first push) — treat as changed so package can be published
+            NEW_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
+            echo "old=" >> $GITHUB_OUTPUT
+            echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install dependencies
+        if: steps.version.outputs.changed == 'true'
+        run: npm ci
+
+      - name: Build types
+        if: steps.version.outputs.changed == 'true'
+        run: npm run build:types
+
+      - name: Publish to npm
+        if: steps.version.outputs.changed == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Ensure auth token is available to npm
+          npm whoami || true
+          npm publish --access public

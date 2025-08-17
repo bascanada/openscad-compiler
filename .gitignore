@@ -3,3 +3,6 @@ node_modules/
 dist/
 *.stl
 *.3mf
+*.txt
+*.png
+*.csg

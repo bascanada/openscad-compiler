@@ -72,7 +72,7 @@ export function compileNative(scadCode, executablePath, fileType = 'stl', args =
         try {
           if (code === 0) {
             try {
-              const result = await fs.readFile(outputFile, 'utf8');
+              const result = await fs.readFile(outputFile);
               emitter.emit('done', result);
             } catch (err) {
               emitter.emit('error', err);

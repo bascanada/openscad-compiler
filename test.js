@@ -39,7 +39,6 @@ screw_hole_diameter = 4;        // The diameter of the screw holes.
 
 
 
-
 //-- [ Reusable Fan Hole Module (Square Version) ] --//
 
 module fan_hole(pos = [0,0,0]) {
@@ -107,10 +106,60 @@ function wrapEmitter(prefix, emitter) {
     };
 
     once(emitter, 'done').then(async (wasmOutput) => {
-        await writeFile(`./cube_${prefix}.stl`, wasmOutput);
+        // wasmOutput might be a Buffer or string depending on engine/fileType
+        const outPath = `./cube_${prefix}.stl`;
+        if (wasmOutput instanceof Buffer) {
+            await writeFile(outPath, wasmOutput);
+        } else {
+            await writeFile(outPath, wasmOutput);
+        }
     });
 }
 
+
+
+async function testSceneGraph(scadCode) {
+    console.log('\n--- Testing Scene Graph (CSG) ---');
+    try {
+        const nativeCsg = await compilerNative.getSceneGraph(scadCode);
+        await writeFile('./cube_native.csg', nativeCsg);
+        console.log('Saved native CSG to cube_native.csg');
+
+        const wasmCsg = await compilerWasm.getSceneGraph(scadCode);
+        await writeFile('./cube_wasm.csg', wasmCsg);
+        console.log('Saved wasm CSG to cube_wasm.csg');
+    } catch (error) {
+        console.error('Scene Graph test failed:', error);
+    }
+}
+
+async function testDimensions(scadCode) {
+    console.log('\n--- Testing Dimensions (STL) ---');
+    try {
+        const nativeDimensions = await compilerNative.getDimensions(scadCode);
+        console.log('Native Dimensions:', nativeDimensions);
+
+        const wasmDimensions = await compilerWasm.getDimensions(scadCode);
+        console.log('WASM Dimensions:', wasmDimensions);
+    } catch (error) {
+        console.error('Dimensions test failed:', error);
+    }
+}
+
+async function testPreview(scadCode) {
+    console.log('\n--- Testing Preview (PNG) ---');
+    try {
+        const nativePreview = await compilerNative.getPreview(scadCode);
+        await writeFile('./preview_native.png', nativePreview);
+        console.log('Saved native preview to preview_native.png');
+
+        const wasmPreview = await compilerWasm.getPreview(scadCode);
+        await writeFile('./preview_wasm.png', wasmPreview);
+        console.log('Saved wasm preview to preview_wasm.png');
+    } catch (error) {
+        console.error('Preview test failed:', error);
+    }
+}
 
 
 (async () => {
@@ -125,5 +174,8 @@ function wrapEmitter(prefix, emitter) {
     wrapEmitter('wasm', compilerWasm.compile(text));
     wrapEmitter('native', compilerNative.compile(text));
 
+    await testSceneGraph(text);
+    await testDimensions(text);
+    await testPreview(text);
 
 })();
